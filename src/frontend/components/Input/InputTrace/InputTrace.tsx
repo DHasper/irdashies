@@ -1,5 +1,5 @@
 import * as d3 from 'd3';
-import { useEffect, useRef, useMemo } from 'react';
+import { useLayoutEffect, useRef, useMemo } from 'react';
 import { getColor } from '@irdashies/utils/colors';
 
 const BRAKE_COLOR = getColor('red');
@@ -59,7 +59,6 @@ export const InputTrace = ({ input, settings }: InputTraceProps) => {
   const brakeAbsPathRef = useRef<SVGPathElement>(null);
   const clutchPathRef = useRef<SVGPathElement>(null);
   const steerPathRef = useRef<SVGPathElement>(null);
-  const rafRef = useRef<number | null>(null);
 
   // Circular buffers - pre-allocated arrays that are reused
   const brakeArray = useRef<number[]>(
@@ -102,146 +101,134 @@ export const InputTrace = ({ input, settings }: InputTraceProps) => {
     [yScale]
   );
 
-  useEffect(() => {
-    if (rafRef.current) {
-      cancelAnimationFrame(rafRef.current);
+  useLayoutEffect(() => {
+    const idx = writeIndex.current;
+
+    // Update arrays in-place at current write position
+    if (includeThrottle) {
+      throttleArray.current[idx] = input.throttle ?? 0;
+    }
+    if (includeBrake) {
+      brakeArray.current[idx] = input.brake ?? 0;
+      if (includeAbs) {
+        brakeABSArray.current[idx] = input.brakeAbsActive ?? false;
+      }
+    }
+    if (includeClutch) {
+      clutchArray.current[idx] = input.clutch ?? 0;
+    }
+    if (includeSteer) {
+      const angleRad = input.steer ?? 0;
+      const normalizedValue = Math.max(
+        0,
+        Math.min(1, angleRad / (2 * Math.PI) + 0.5)
+      );
+      steerArray.current[idx] = normalizedValue;
     }
 
-    rafRef.current = requestAnimationFrame(() => {
-      const idx = writeIndex.current;
+    // Move write index forward (circular)
+    writeIndex.current = (idx + 1) % bufferSize;
+    const wi = writeIndex.current;
+    const indices = getIndices(bufferSize);
 
-      // Update arrays in-place at current write position
-      if (includeThrottle) {
-        throttleArray.current[idx] = input.throttle ?? 0;
-      }
-      if (includeBrake) {
-        brakeArray.current[idx] = input.brake ?? 0;
-        if (includeAbs) {
-          brakeABSArray.current[idx] = input.brakeAbsActive ?? false;
-        }
-      }
-      if (includeClutch) {
-        clutchArray.current[idx] = input.clutch ?? 0;
-      }
-      if (includeSteer) {
-        const angleRad = input.steer ?? 0;
-        const normalizedValue = Math.max(
-          0,
-          Math.min(1, angleRad / (2 * Math.PI) + 0.5)
-        );
-        steerArray.current[idx] = normalizedValue;
-      }
-
-      // Move write index forward (circular)
-      writeIndex.current = (idx + 1) % bufferSize;
-      const wi = writeIndex.current;
-      const indices = getIndices(bufferSize);
-
-      // Helper to generate path d string for a standard line
-      const generatePathD = (values: number[]) => {
-        const line = d3
-          .line<number>()
-          .x((i) => xScale(i))
-          .y((i) => {
-            const pi = (wi + i) % bufferSize;
-            return yScale(Math.max(0, Math.min(1, values[pi])));
-          })
-          .curve(d3.curveBasis);
-        return line(indices) ?? '';
-      };
-
-      // Helper for centered line (steering)
-      const generateCenteredPathD = (values: number[]) => {
-        const centerY = height / 2;
-        const line = d3
-          .line<number>()
-          .x((i) => xScale(i))
-          .y((i) => {
-            const pi = (wi + i) % bufferSize;
-            const d = values[pi];
-            return centerY - (d - 0.5) * height;
-          })
-          .curve(d3.curveBasis);
-        return line(indices) ?? '';
-      };
-
-      // Helper to generate the ABS-active line path (same curve, gated by brakeABSArray)
-      const generateAbsLineD = () => {
-        const line = d3
-          .line<number>()
-          .x((i) => xScale(i))
-          .y((i) => {
-            const pi = (wi + i) % bufferSize;
-            return yScale(Math.max(0, Math.min(1, brakeArray.current[pi])));
-          })
-          .defined((i) => {
-            const pi = (wi + i) % bufferSize;
-            return brakeABSArray.current[pi];
-          })
-          .curve(d3.curveBasis);
-        return line(indices) ?? '';
-      };
-
-      // Helper to generate the ABS area fill (brake curve → y=0, gated by brakeABSArray)
-      const generateAbsAreaD = () => {
-        const area = d3
-          .area<number>()
-          .x((i) => xScale(i))
-          .y0(yScale(0))
-          .y1((i) => {
-            const pi = (wi + i) % bufferSize;
-            return yScale(Math.max(0, Math.min(1, brakeArray.current[pi])));
-          })
-          .defined((i) => {
-            const pi = (wi + i) % bufferSize;
-            return brakeABSArray.current[pi];
-          })
-          .curve(d3.curveBasis);
-        return area(indices) ?? '';
-      };
-
-      // Update path d attributes directly on persistent DOM elements
-      if (includeSteer && steerPathRef.current) {
-        steerPathRef.current.setAttribute(
-          'd',
-          generateCenteredPathD(steerArray.current)
-        );
-      }
-      if (includeClutch && clutchPathRef.current) {
-        clutchPathRef.current.setAttribute(
-          'd',
-          generatePathD(clutchArray.current)
-        );
-      }
-      if (includeThrottle && throttlePathRef.current) {
-        throttlePathRef.current.setAttribute(
-          'd',
-          generatePathD(throttleArray.current)
-        );
-      }
-      if (includeBrake) {
-        if (brakePathRef.current) {
-          brakePathRef.current.setAttribute(
-            'd',
-            generatePathD(brakeArray.current)
-          );
-        }
-        if (includeAbs) {
-          if (absStyle === 'bar' && brakeAbsAreaRef.current) {
-            brakeAbsAreaRef.current.setAttribute('d', generateAbsAreaD());
-          }
-          if (brakeAbsPathRef.current) {
-            brakeAbsPathRef.current.setAttribute('d', generateAbsLineD());
-          }
-        }
-      }
-    });
-
-    return () => {
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
-      }
+    // Helper to generate path d string for a standard line
+    const generatePathD = (values: number[]) => {
+      const line = d3
+        .line<number>()
+        .x((i) => xScale(i))
+        .y((i) => {
+          const pi = (wi + i) % bufferSize;
+          return yScale(Math.max(0, Math.min(1, values[pi])));
+        })
+        .curve(d3.curveBasis);
+      return line(indices) ?? '';
     };
+
+    // Helper for centered line (steering)
+    const generateCenteredPathD = (values: number[]) => {
+      const centerY = height / 2;
+      const line = d3
+        .line<number>()
+        .x((i) => xScale(i))
+        .y((i) => {
+          const pi = (wi + i) % bufferSize;
+          const d = values[pi];
+          return centerY - (d - 0.5) * height;
+        })
+        .curve(d3.curveBasis);
+      return line(indices) ?? '';
+    };
+
+    // Helper to generate the ABS-active line path (same curve, gated by brakeABSArray)
+    const generateAbsLineD = () => {
+      const line = d3
+        .line<number>()
+        .x((i) => xScale(i))
+        .y((i) => {
+          const pi = (wi + i) % bufferSize;
+          return yScale(Math.max(0, Math.min(1, brakeArray.current[pi])));
+        })
+        .defined((i) => {
+          const pi = (wi + i) % bufferSize;
+          return brakeABSArray.current[pi];
+        })
+        .curve(d3.curveBasis);
+      return line(indices) ?? '';
+    };
+
+    // Helper to generate the ABS area fill (brake curve → y=0, gated by brakeABSArray)
+    const generateAbsAreaD = () => {
+      const area = d3
+        .area<number>()
+        .x((i) => xScale(i))
+        .y0(yScale(0))
+        .y1((i) => {
+          const pi = (wi + i) % bufferSize;
+          return yScale(Math.max(0, Math.min(1, brakeArray.current[pi])));
+        })
+        .defined((i) => {
+          const pi = (wi + i) % bufferSize;
+          return brakeABSArray.current[pi];
+        })
+        .curve(d3.curveBasis);
+      return area(indices) ?? '';
+    };
+
+    // Update path d attributes directly on persistent DOM elements
+    if (includeSteer && steerPathRef.current) {
+      steerPathRef.current.setAttribute(
+        'd',
+        generateCenteredPathD(steerArray.current)
+      );
+    }
+    if (includeClutch && clutchPathRef.current) {
+      clutchPathRef.current.setAttribute(
+        'd',
+        generatePathD(clutchArray.current)
+      );
+    }
+    if (includeThrottle && throttlePathRef.current) {
+      throttlePathRef.current.setAttribute(
+        'd',
+        generatePathD(throttleArray.current)
+      );
+    }
+    if (includeBrake) {
+      if (brakePathRef.current) {
+        brakePathRef.current.setAttribute(
+          'd',
+          generatePathD(brakeArray.current)
+        );
+      }
+      if (includeAbs) {
+        if (absStyle === 'bar' && brakeAbsAreaRef.current) {
+          brakeAbsAreaRef.current.setAttribute('d', generateAbsAreaD());
+        }
+        if (brakeAbsPathRef.current) {
+          brakeAbsPathRef.current.setAttribute('d', generateAbsLineD());
+        }
+      }
+    }
   }, [
     input,
     includeThrottle,
