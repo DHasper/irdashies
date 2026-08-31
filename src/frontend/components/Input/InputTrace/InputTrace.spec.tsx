@@ -1,6 +1,5 @@
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { getColor } from '@irdashies/utils/colors';
 import { InputTrace } from './InputTrace';
 
 const d = (container: HTMLElement, color: string) =>
@@ -14,7 +13,7 @@ describe('InputTrace', () => {
 
     rerender(<InputTrace input={{ throttle: 1, brake: 0.5 }} />);
 
-    expect(d(container, getColor('green'))).toMatch(/^M/);
-    expect(d(container, getColor('red'))).toMatch(/^M/);
+    expect(d(container, '#00c951')).toMatch(/^M/); // throttle
+    expect(d(container, '#fb2c36')).toMatch(/^M/); // brake
   });
 });

@@ -1,10 +1,11 @@
 import { memo, useMemo } from 'react';
-import { getColor } from '@irdashies/utils/colors';
+
+const ABS_COLOR = '#f0b100';
 
 const INPUT_CONFIG = [
-  { key: 'clutch', color: getColor('blue') },
-  { key: 'brake', color: getColor('red') },
-  { key: 'throttle', color: getColor('green') },
+  { key: 'clutch', color: '#2b7fff' },
+  { key: 'brake', color: '#fb2c36' },
+  { key: 'throttle', color: '#00c951' },
 ] as const;
 
 export interface InputBarProps {
@@ -42,7 +43,7 @@ export const InputBar = memo(
         return {
           key,
           value,
-          color: isBrakeWithAbs ? getColor('yellow', 500) : color,
+          color: isBrakeWithAbs ? ABS_COLOR : color,
           showAbs: isBrakeWithAbs,
         };
       });

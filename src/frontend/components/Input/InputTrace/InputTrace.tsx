@@ -1,12 +1,11 @@
 import * as d3 from 'd3';
 import { useLayoutEffect, useRef, useMemo } from 'react';
-import { getColor } from '@irdashies/utils/colors';
 
-const BRAKE_COLOR = getColor('red');
-const BRAKE_ABS_COLOR = getColor('yellow', 500);
-const THROTTLE_COLOR = getColor('green');
-const CLUTCH_COLOR = getColor('blue');
-const STEER_COLOR = getColor('slate', 300);
+const BRAKE_COLOR = '#fb2c36';
+const BRAKE_ABS_COLOR = '#f0b100';
+const THROTTLE_COLOR = '#00c951';
+const CLUTCH_COLOR = '#2b7fff';
+const STEER_COLOR = '#cad5e2';
 
 export interface InputTraceProps {
   input: {
