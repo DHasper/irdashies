@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { useDashboard } from '@irdashies/context';
-import type { GeneralSettingsType } from '@irdashies/types';
+import {
+  DEFAULT_ANONYMOUS_NAMES,
+  type GeneralSettingsType,
+} from '@irdashies/types';
 import { BaseSettingsSection } from '../components/BaseSettingsSection';
 
 const FONT_PRESETS = {
@@ -106,7 +109,19 @@ export const GeneralSettings = ({ previewMode }: GeneralSettingsProps = {}) => {
       snapToGrid:
         currentDashboard?.generalSettings?.editMode?.snapToGrid ?? false,
     },
+    anonymizeNames: {
+      names:
+        currentDashboard?.generalSettings?.anonymizeNames?.names ??
+        DEFAULT_ANONYMOUS_NAMES,
+      ownName: currentDashboard?.generalSettings?.anonymizeNames?.ownName ?? '',
+    },
   });
+  const [anonymousNamesText, setAnonymousNamesText] = useState(() =>
+    (
+      currentDashboard?.generalSettings?.anonymizeNames?.names ??
+      DEFAULT_ANONYMOUS_NAMES
+    ).join('\n')
+  );
 
   if (!currentDashboard || !onDashboardUpdated) {
     return <>Loading...</>;
@@ -188,6 +203,32 @@ export const GeneralSettings = ({ previewMode }: GeneralSettingsProps = {}) => {
     newWeight: 'light' | 'normal' | 'medium' | 'semibold' | 'bold' | 'extrabold'
   ) => {
     const newSettings = { ...settings, fontWeight: newWeight };
+    setSettings(newSettings);
+    updateDashboard(newSettings);
+  };
+
+  const handleAnonymousNamesChange = (text: string) => {
+    setAnonymousNamesText(text);
+    const names = text
+      .split('\n')
+      .map((n) => n.trim())
+      .filter(Boolean);
+    const newSettings = {
+      ...settings,
+      anonymizeNames: { ...settings.anonymizeNames, names },
+    };
+    setSettings(newSettings);
+    updateDashboard(newSettings);
+  };
+
+  const handleOwnAliasChange = (ownName: string) => {
+    const newSettings = {
+      ...settings,
+      anonymizeNames: {
+        names: settings.anonymizeNames?.names ?? DEFAULT_ANONYMOUS_NAMES,
+        ownName,
+      },
+    };
     setSettings(newSettings);
     updateDashboard(newSettings);
   };
@@ -474,6 +515,42 @@ export const GeneralSettings = ({ previewMode }: GeneralSettingsProps = {}) => {
               />
               <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
             </label>
+          </div>
+        </BaseSettingsSection>
+
+        {/* Anonymize Names */}
+        <BaseSettingsSection
+          title="Anonymize Names"
+          description="Aliases shown instead of real driver names when Anonymize Names is turned on under Driver Name in the Relative or Standings settings. One name per line. A driver keeps the same alias across sessions."
+        >
+          <textarea
+            value={anonymousNamesText}
+            onChange={(e) => handleAnonymousNamesChange(e.target.value)}
+            rows={8}
+            spellCheck={false}
+            aria-label="Anonymous names, one per line"
+            className="w-full px-3 py-2 bg-slate-700 text-slate-300 rounded border border-slate-600 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono text-sm"
+          />
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h4
+                id="anonymize-own-alias-label"
+                className="text-md font-medium text-slate-300"
+              >
+                Your Alias
+              </h4>
+              <p className="text-sm text-slate-500 pr-8">
+                Shown for your own car. Leave empty to get a name from the list.
+              </p>
+            </div>
+            <input
+              type="text"
+              value={settings.anonymizeNames?.ownName ?? ''}
+              onChange={(e) => handleOwnAliasChange(e.target.value)}
+              placeholder="From list"
+              aria-labelledby="anonymize-own-alias-label"
+              className="px-3 py-2 bg-slate-700 text-slate-300 rounded border border-slate-600 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
           </div>
         </BaseSettingsSection>
 

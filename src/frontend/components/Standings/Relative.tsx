@@ -19,6 +19,7 @@ import {
   useDriverRelatives,
   useHighlightColor,
   useDriverTagMap,
+  useAnonymousNameMap,
 } from './hooks';
 import { SessionBar } from './components/SessionBar/SessionBar';
 import { TitleBar } from './components/TitleBar/TitleBar';
@@ -40,6 +41,7 @@ export const Relative = () => {
   );
   const highlightColor = useHighlightColor();
   const { tagMap, hasAnyTag } = useDriverTagMap(settings?.driverTag?.enabled);
+  const anonymousNames = useAnonymousNameMap(settings?.driverName?.anonymize);
   const numCarClasses = useWeekendInfoNumCarClasses();
   const isMultiClass = (numCarClasses ?? 0) > 1;
   const isSessionVisible = useSessionVisibility(settings?.sessionVisibility);
@@ -217,7 +219,7 @@ export const Relative = () => {
               ? result.driver?.carNum || ''
               : undefined
           }
-          name={result.driver?.name || ''}
+          name={anonymousNames.get(result.carIdx) ?? result.driver?.name ?? ''}
           teamName={
             settings?.teamName?.enabled && isTeamRacing
               ? result.driver?.teamName || ''
@@ -293,6 +295,7 @@ export const Relative = () => {
     tagMap,
     hasAnyTag,
     hasAnyCountryFlag,
+    anonymousNames,
     generalSettings?.compactMode,
     lapTimeDeltasEnabled,
     numLapDeltas,

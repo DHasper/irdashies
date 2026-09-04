@@ -41,6 +41,8 @@ export interface DriverNameConfig {
   showStatusBadges: boolean;
   removeNumbersFromName: boolean;
   nameFormat?: NameFormat;
+  /** Replace driver names with aliases from generalSettings.anonymizeNames */
+  anonymize?: boolean;
 }
 
 export interface PitStatusConfig {

@@ -141,6 +141,8 @@ export interface GeneralSettingsType {
   };
   /** Driver tag groups and mappings for overlays */
   driverTagSettings?: DriverTagSettings;
+  /** Fake-name pool and personal alias used by the Anonymize Names toggle */
+  anonymizeNames?: { names: string[]; ownName?: string };
 }
 
 /**

@@ -1424,3 +1424,22 @@ export const PushToPass: Story = {
     layout: 'padded',
   },
 };
+
+export const AnonymizedNames: Story = {
+  decorators: [
+    TelemetryDecoratorWithConfigAndGeneralSettings(
+      undefined,
+      {
+        relative: {
+          driverName: {
+            enabled: true,
+            showStatusBadges: true,
+            removeNumbersFromName: false,
+            anonymize: true,
+          },
+        },
+      },
+      { anonymizeNames: { ownName: 'The Stig' } }
+    ),
+  ],
+};
