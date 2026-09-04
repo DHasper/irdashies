@@ -19,7 +19,7 @@ interface DriverIdentity {
   UserName: string;
 }
 
-const driversIdentityEqual = (
+export const driversIdentityEqual = (
   a: DriverIdentity[] | undefined,
   b: DriverIdentity[] | undefined
 ): boolean => {

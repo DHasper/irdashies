@@ -10,6 +10,7 @@ import {
   useStandingsSettings,
   useHighlightColor,
   useDriverTagMap,
+  useAnonymousNameMap,
   useManufacturerCounts,
 } from './hooks';
 import {
@@ -53,6 +54,7 @@ export const Standings = () => {
   );
   const classStats = useCarClassStats();
   const { tagMap, hasAnyTag } = useDriverTagMap(settings?.driverTag?.enabled);
+  const anonymousNames = useAnonymousNameMap(settings?.driverName?.anonymize);
   const numCarClasses = useWeekendInfoNumCarClasses();
   const isMultiClass = (numCarClasses ?? 0) > 1;
   const highlightColor = useHighlightColor();
@@ -210,7 +212,11 @@ export const Standings = () => {
                               ? result.driver?.carNum || ''
                               : undefined
                           }
-                          name={result.driver?.name || ''}
+                          name={
+                            anonymousNames.get(result.carIdx) ??
+                            result.driver?.name ??
+                            ''
+                          }
                           teamName={
                             settings?.teamName?.enabled && isTeamRacing
                               ? result.driver?.teamName || ''

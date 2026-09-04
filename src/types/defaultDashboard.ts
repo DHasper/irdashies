@@ -1,6 +1,39 @@
 import type { GeneralSettingsType } from './dashboardLayout';
 import type { TypedDashboardWidget, WidgetConfigMap } from './widgetConfigs';
 
+export const DEFAULT_ANONYMOUS_NAMES = [
+  'Alex Carter',
+  'Jamie Novak',
+  'Sam Fischer',
+  'Robin Keller',
+  'Casey Morgan',
+  'Taylor Brooks',
+  'Jordan Reyes',
+  'Riley Hansen',
+  'Morgan Lindqvist',
+  'Charlie Weber',
+  'Drew Mancini',
+  'Kai Tanaka',
+  'Noor Haddad',
+  'Elliot Moreau',
+  'Sasha Petrov',
+  'Quinn Murphy',
+  'Rowan Silva',
+  'Avery Nakamura',
+  'Devon Okafor',
+  'Finley Berg',
+  'Harper Costa',
+  'Jesse Laurent',
+  'Kendall Ortiz',
+  'Logan Meyer',
+  'Micah Rossi',
+  'Parker Dubois',
+  'Reese Kowalski',
+  'Skyler Nguyen',
+  'Tatum Schulz',
+  'Wren Ivanov',
+];
+
 export const defaultDashboard: {
   widgets: TypedDashboardWidget[];
   generalSettings?: GeneralSettingsType;
@@ -65,6 +98,7 @@ export const defaultDashboard: {
           enabled: true,
           showStatusBadges: true,
           removeNumbersFromName: false,
+          anonymize: false,
         },
         teamName: {
           enabled: false,
@@ -467,6 +501,7 @@ export const defaultDashboard: {
           enabled: true,
           showStatusBadges: true,
           removeNumbersFromName: false,
+          anonymize: false,
         },
         teamName: {
           enabled: false,
@@ -1492,6 +1527,7 @@ export const defaultDashboard: {
       pixelDistances: false,
       snapToGrid: false,
     },
+    anonymizeNames: { names: DEFAULT_ANONYMOUS_NAMES, ownName: '' },
   },
 };
 

@@ -504,6 +504,27 @@ const DisplaySettingsList = ({
               setting.configKey === 'driverName' &&
               settings.config.driverName.enabled && (
                 <div className="flex items-center justify-between pl-8 mt-2 indent-8">
+                  <span className="text-sm text-slate-300">
+                    Anonymize Names
+                  </span>
+                  <ToggleSwitch
+                    enabled={settings.config.driverName.anonymize ?? false}
+                    onToggle={(enabled) => {
+                      const cv = settings.config[setting.configKey] as {
+                        enabled: boolean;
+                        [key: string]: unknown;
+                      };
+                      handleConfigChange({
+                        [setting.configKey]: { ...cv, anonymize: enabled },
+                      });
+                    }}
+                  />
+                </div>
+              )}
+            {setting.hasSubSetting &&
+              setting.configKey === 'driverName' &&
+              settings.config.driverName.enabled && (
+                <div className="flex items-center justify-between pl-8 mt-2 indent-8">
                   <span className="text-sm text-slate-300">Status Badges</span>
                   <ToggleSwitch
                     enabled={settings.config.driverName.showStatusBadges}
